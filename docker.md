@@ -30,12 +30,12 @@ ENTRYPOINT ["dotnet", "InternalAPI.dll"]
 ```
 
 用dockerfile建立image
-```console
+```sh
 sudo docker build -t [image name] -f [Dockerfile name] .
 ```
 
 ### docker nginx用的ssl key
-```console
+```sh
 #PARENT是目標DNS url
 PARENT="lab34.starlux-airlines.com"
 openssl req \
@@ -73,7 +73,7 @@ openssl x509 -noout -text -in self.crt
 ```
 
 ### net core用的ssl key
-```console
+```sh
 # -ep 路徑/檔名
 # -p 密碼
 dotnet dev-certs https -ep ${HOME}/.aspnet/https/aspnetapp.pfx -p bpm7749
@@ -81,7 +81,7 @@ dotnet dev-certs https -ep ${HOME}/.aspnet/https/aspnetapp.pfx -p bpm7749
 
 ### nginx.conf
 設定docker nginx
-```conf
+```nginx
 user nginx;
 worker_processes auto;
 error_log /var/log/nginx/error.log;
@@ -168,7 +168,7 @@ http {
 ### docker compose
 - docker compose的設定文件，docker-compose.yml。
 - docker compose可以理解為簡易的k8s，啟動一組docker服務的方法，通常用於本地測試，正式部署會用k8s。
-```yaml=
+```yaml
 version: '1.0'
 
 # 定義Docker服務
@@ -240,7 +240,8 @@ services:
       - backend-service
       - mini
 ```
+
 啟動docker compose
-```console
+```sh
 sudo docker compose up
 ```
