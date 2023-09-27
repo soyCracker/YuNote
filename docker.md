@@ -34,10 +34,10 @@ ENTRYPOINT ["dotnet", "InternalAPI.dll"]
 sudo docker build -t [image name] -f [Dockerfile name] .
 ```
 
-### docker nginx用的ssl key
+### docker nginx用的ssl key(開發用)
 ```sh
 #PARENT是目標DNS url
-PARENT="lab34.starlux-airlines.com"
+PARENT="yu77.com"
 openssl req \
 -x509 \
 -newkey rsa:4096 \
@@ -76,7 +76,7 @@ openssl x509 -noout -text -in self.crt
 ```sh
 # -ep 路徑/檔名
 # -p 密碼
-dotnet dev-certs https -ep ${HOME}/.aspnet/https/aspnetapp.pfx -p bpm7749
+dotnet dev-certs https -ep ${HOME}/.aspnet/https/aspnetapp.pfx -p yu7749
 ```
 
 ### nginx.conf
@@ -95,14 +95,6 @@ http {
         server internalapi-service:443;
     }
 
-    upstream externalapi-upstream {
-        server externalapi-service:443;
-    }
-
-    upstream backend-upstream {
-        server backend-service:443;
-    }
-
     upstream mini-upstream {
         server mini:80;
     }
@@ -119,28 +111,6 @@ http {
             # internalapi-upstream對應上方upstream internalapi-upstream
             # 使用 $1 變量將 URL 的捕獲部分傳遞給上游服務器 。 $is_args$args 部分用於保留原始請求中的任何查詢參數。
             proxy_pass https://internalapi-upstream/$1$is_args$args;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection keep-alive;
-            proxy_set_header Host $host;
-            proxy_cache_bypass $http_upgrade;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        location ~* /externalapi/(.*)$ {
-            proxy_pass https://externalapi-upstream/$1$is_args$args;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection keep-alive;
-            proxy_set_header Host $host;
-            proxy_cache_bypass $http_upgrade;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }
-
-        location ~* /backend/(.*)$ {
-            proxy_pass https://backend-upstream/$1$is_args$args;
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection keep-alive;
@@ -191,35 +161,9 @@ services:
     environment:
       # 設定net core的ssl
       - ASPNETCORE_URLS=https://+:443;http://+:80
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=bpm7749
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=yu7749
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
     # 將本地檔案映射到容器中
-    volumes:
-      - ./SettingConfig/AppSettingsSecrets.json:/SettingConfig/AppSettingsSecrets.json
-      - ./ssl-key/aspnetapp.pfx:/https/aspnetapp.pfx
-
-  externalapi-service:
-    image: bpm-externalapi
-    ports:
-      - "8703:443"
-      - "8704:80"
-    environment:
-      - ASPNETCORE_URLS=https://+:443;http://+:80
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=bpm7749
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
-    volumes:
-      - ./SettingConfig/AppSettingsSecrets.json:/SettingConfig/AppSettingsSecrets.json
-      - ./ssl-key/aspnetapp.pfx:/https/aspnetapp.pfx
-  
-  backend-service:
-    image: bpm-backend
-    ports:
-      - "8705:443"
-      - "8706:80"
-    environment:
-      - ASPNETCORE_URLS=https://+:443;http://+:80
-      - ASPNETCORE_Kestrel__Certificates__Default__Password=bpm7749
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/https/aspnetapp.pfx
     volumes:
       - ./SettingConfig/AppSettingsSecrets.json:/SettingConfig/AppSettingsSecrets.json
       - ./ssl-key/aspnetapp.pfx:/https/aspnetapp.pfx
@@ -236,8 +180,6 @@ services:
     # 定義依賴關係，確保在啟動nginx之前先啟動其他服務
     depends_on:
       - internalapi-service
-      - externalapi-service
-      - backend-service
       - mini
 ```
 
